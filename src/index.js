@@ -49,7 +49,7 @@ const choiceModel = sequelize.define('choice', {
 
 matchModel.hasMany(choiceModel)
 choiceModel.belongsTo(matchModel)
-choiceModel.belongsTo(matchParticipantModel, { as: 'choice' })
+choiceModel.belongsTo(matchParticipantModel)
 
 matchModel.hasMany(matchParticipantModel)
 matchParticipantModel.belongsTo(matchModel)
@@ -59,7 +59,7 @@ teamModel.hasMany(matchParticipantModel)
 
 sequelize.sync()
 
-const prefix = '.'
+const prefix = ','
 
 client.on('message', async message => {
   if (!message.content.startsWith(prefix)) return
@@ -207,7 +207,7 @@ client.on('message', async message => {
         console.log(userId, choice)
         entriesCreate.push({
           matchId: args[0],
-          choiceId: choice,
+          matchParticipantId: choice,
           userId
         })
       })
@@ -215,6 +215,31 @@ client.on('message', async message => {
       await choiceModel.bulkCreate(entriesCreate)
       message.channel.stopTyping()
       message.reply(`escolhas computadas para a partida #${matchResponse.getDataValue('id')}`)
+      break
+    case 'choices':
+      const userChoices = await choiceModel.findAll({
+        where: {
+          userId: message.member.user.id,
+        },
+        include: [{
+          association: 'matchParticipant',
+          required: true,
+          include: [{
+            association: 'team',
+            required: true
+          }]
+        }, {
+          association: 'match',
+          required: true
+        }]
+      })
+      message.channel.send(
+        new MessageEmbed()
+          .setTitle(`Escolhas de ${message.member.displayName}`)
+          .setDescription(
+            userChoices.map(u => `⚔️ ${client.emojis.cache.get(u.toJSON().matchParticipant.team.emojiId)} ${u.toJSON().match.name}`)
+          )
+      )
       break
     case 'setwinner':
       message.reply('em breve')
