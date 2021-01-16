@@ -82,7 +82,7 @@ client.on('message', async message => {
         emojiId: emojiId,
         name: args.slice(1).join(' ')
       })
-      message.reply('Time criado')
+      message.reply('time criado')
       break
     case 'teams':
       const teams = await teamModel.findAll({
@@ -167,6 +167,8 @@ client.on('message', async message => {
         }
       })
       
+      message.channel.startTyping()
+
       const participants = await matchParticipantModel.findAll({
         where: {
           matchId: matchResponse.getDataValue('id')
@@ -211,8 +213,11 @@ client.on('message', async message => {
       })
 
       await choiceModel.bulkCreate(entriesCreate)
+      message.channel.stopTyping()
+      message.reply(`escolhas computadas para a partida #${matchResponse.getDataValue('id')}`)
       break
     case 'setwinner':
+      message.reply('em breve')
       break
   }
 })
