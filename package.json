@@ -1,0 +1,29 @@
+{
+  "name": "bolao-inhousebr",
+  "version": "1.0.0",
+  "description": "Discord Betting?",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pedrofracassi/bolao-inhousebr.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/pedrofracassi/bolao-inhousebr/issues"
+  },
+  "homepage": "https://github.com/pedrofracassi/bolao-inhousebr#readme",
+  "dependencies": {
+    "discord.js": "^12.5.1",
+    "dot-env": "0.0.1",
+    "dotenv": "^8.2.0",
+    "nodemon": "^2.0.7",
+    "pg": "^8.5.1",
+    "pg-hstore": "^2.3.3",
+    "sequelize": "^6.3.5"
+  }
+}
