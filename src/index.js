@@ -59,7 +59,7 @@ teamModel.hasMany(matchParticipantModel)
 
 sequelize.sync()
 
-const prefix = ','
+const prefix = process.env.PREFIX || ','
 
 client.on('message', async message => {
   if (!message.content.startsWith(prefix)) return
@@ -237,12 +237,47 @@ client.on('message', async message => {
         new MessageEmbed()
           .setTitle(`Escolhas de ${message.member.displayName}`)
           .setDescription(
-            userChoices.map(u => `⚔️ ${client.emojis.cache.get(u.toJSON().matchParticipant.team.emojiId)} ${u.toJSON().match.name}`)
+            userChoices.map(u => {
+              const hasWinner = !!u.match.winnerParticipantId
+              const choseWinner = u.matchParticipantId === u.match.winnerParticipantId
+              return `${hasWinner ? (choseWinner ? '✅' : '❌') : '⚔️'} ${client.emojis.cache.get(u.toJSON().matchParticipant.team.emojiId)} ${u.toJSON().match.name}`
+            })
           )
       )
       break
     case 'setwinner':
-      message.reply('em breve')
+      if (!message.member.hasPermission('MANAGE_GUILD')) return message.reply('sem permissão')
+      if (!args[0]) return message.reply('informe o número da partida.')
+      if (!args[1]) return message.reply('informe o emoji do time.')
+      
+      const winnerEmojiId = emojiRegex.test(args[1]) ? args[1].match(emojiRegex)[1] : args[1]
+
+      const currentMatch = await matchModel.findOne({
+        where: {
+          id: args[0]
+        },
+        include: {
+          model: matchParticipantModel,
+          include: teamModel
+        }
+      })
+
+      if (!currentMatch) return message.reply('partida não encontrada')
+
+      const winnerParticipant = currentMatch.toJSON().matchParticipants.find(mp => mp.team.emojiId === winnerEmojiId)
+      
+      console.log(winnerParticipant)
+      if (!winnerParticipant) return message.reply('nenhum participante com esse emoji encontrado')
+
+      await matchModel.update({
+        winnerParticipantId: winnerParticipant.id
+      }, {
+        where: {
+          id: currentMatch.id
+        }
+      })
+
+      message.reply(`vencedor da partida ${currentMatch.id} definido como **${winnerParticipant.team.name}**`)
       break
   }
 })
@@ -260,24 +295,5 @@ async function fetchUsers (manager, data = [], after = '0') {
 client.on('ready', () => {
   console.log('Logado como', client.user.tag)
 })
-
-/*
-client.on('ready', async () => {
-  const guild = client.guilds.cache.get('789190853981241346')
-  const channel = guild.channels.cache.get('799800805485576236')
-  const messages = await channel.messages.fetch()
-  messages.forEach(m => {
-    const matchRegex = /^([A-Z]{3,4}) x ([A-Z]{3,4})$/
-    if (matchRegex.test(m.content)) {
-      m.reactions.cache.forEach(async r => {
-        const users = await r.users.fetch()
-        users.forEach(u => {
-          console.log(m.content, u.id, r.emoji.name)
-        })
-      })
-    }
-  })
-})
-*/
 
 client.login(process.env.DISCORD_TOKEN)
