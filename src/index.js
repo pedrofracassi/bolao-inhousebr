@@ -295,8 +295,7 @@ client.on('message', async message => {
           required: true
         }],
         group: [ sequelize.col('userId') ],
-        order: [['count', 'DESC']],
-        limit: 10
+        order: [['count', 'DESC']]
       })
       const emojis = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔟']
       message.channel.send(
