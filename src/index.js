@@ -2,7 +2,7 @@ require('dotenv').config()
 
 const { Client, MessageEmbed } = require('discord.js')
 
-const { Sequelize, DataTypes } = require('sequelize')
+const { Sequelize, DataTypes, Op } = require('sequelize')
 const client = new Client()
 
 const sequelize = new Sequelize(process.env.DATABASE_URI)
@@ -231,7 +231,8 @@ client.on('message', async message => {
         }, {
           association: 'match',
           required: true
-        }]
+        }],
+        order: [['match', 'createdAt', 'DESC']]
       })
       message.channel.send(
         new MessageEmbed()
@@ -278,6 +279,31 @@ client.on('message', async message => {
       })
 
       message.reply(`vencedor da partida ${currentMatch.id} definido como **${winnerParticipant.team.name}**`)
+      break
+    case 'ranking':
+      const correctChoices = await choiceModel.count({
+        where: {
+          matchParticipantId: {
+            [Op.eq]: sequelize.col('match.winnerParticipantId')
+          }
+        },
+        include: [{
+          association: 'matchParticipant',
+          required: true
+        }, {
+          association: 'match',
+          required: true
+        }],
+        group: [ sequelize.col('userId') ],
+        order: [['count', 'DESC']],
+        limit: 10
+      })
+      const emojis = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔟']
+      message.channel.send(
+        new MessageEmbed()
+          .setTitle('Ranking')
+          .setDescription(correctChoices.map((c, i) => `${emojis[i]} ${client.users.cache.get(c.userId)} ${c.count} pontos`))
+      )
       break
   }
 })
