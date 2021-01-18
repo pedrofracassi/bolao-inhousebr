@@ -302,7 +302,7 @@ client.on('message', async message => {
       message.channel.send(
         new MessageEmbed()
           .setTitle('Ranking')
-          .setDescription(correctChoices.map((c, i) => `${emojis[i]} ${client.users.cache.get(c.userId)} ${c.count} pontos`))
+          .setDescription(correctChoices.slice(0, 10).map((c, i) => `${emojis[i]} ${client.users.cache.get(c.userId)} ${c.count} pontos`))
       )
       break
   }
