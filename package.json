@@ -19,6 +19,7 @@
   },
   "homepage": "https://github.com/pedrofracassi/bolao-inhousebr#readme",
   "dependencies": {
+    "discord-paginationembed": "^2.1.0",
     "discord.js": "^12.5.1",
     "dot-env": "0.0.1",
     "dotenv": "^8.2.0",

@@ -9,6 +9,8 @@ const sequelize = new Sequelize(process.env.DATABASE_URI)
 
 const emojiRegex = /<:.*:([0-9]{16,18})>/
 
+const { Embeds } = require('discord-paginationembed')
+
 const matchModel = sequelize.define('match', {
   serverId: DataTypes.STRING,
   name: DataTypes.STRING,
@@ -60,6 +62,8 @@ teamModel.hasMany(matchParticipantModel)
 sequelize.sync()
 
 const prefix = ','
+
+const chunkArray = (array, chunk_size) => Array(Math.ceil(array.length / chunk_size)).fill().map((_, index) => index * chunk_size).map(begin => array.slice(begin, begin + chunk_size))
 
 client.on('message', async message => {
   if (!message.content.startsWith(prefix)) return
@@ -233,13 +237,18 @@ client.on('message', async message => {
           required: true
         }]
       })
-      message.channel.send(
-        new MessageEmbed()
-          .setTitle(`Escolhas de ${message.member.displayName}`)
-          .setDescription(
-            userChoices.map(u => `⚔️ ${client.emojis.cache.get(u.toJSON().matchParticipant.team.emojiId)} ${u.toJSON().match.name}`)
-          )
-      )
+      const choiceChunks = chunkArray(userChoices, 10)
+      const embed = new Embeds()
+        .setChannel(message.channel)
+        .setAuthorizedUsers([ message.author.id ])
+        .setArray(choiceChunks.map(choices => {
+          return new MessageEmbed()
+            .setTitle(`Escolhas de ${message.member.displayName}`)
+            .setDescription(
+              choices.map(u => `⚔️ ${client.emojis.cache.get(u.toJSON().matchParticipant.team.emojiId)} ${u.toJSON().match.name}`)
+            )
+        }))
+      embed.build()
       break
     case 'setwinner':
       message.reply('em breve')
